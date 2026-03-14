@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OroLabs | Artificial Intelligence</title>
+    <title>OroLabs | Neural Architectures</title>
     <style>
-        /* --- RESET & VARIABLES --- */
+        /* --- RESET & VARIABLES (WHITE/BLACK THEME) --- */
         :root {
-            --bg-color: #030303;
-            --sidebar-bg: rgba(10, 10, 10, 0.7);
-            --text-main: #e0e0e0;
-            --text-muted: #666;
-            --accent-primary: #FFD700; /* Gold */
-            --accent-secondary: #00f3ff; /* Cyan */
-            --border-color: #333;
-            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --bg-color: #F4F4F4;       /* Lab White */
+            --bg-secondary: #E0E0E0;   /* Light Grey */
+            --text-main: #050505;      /* Deep Black */
+            --text-muted: #555555;     /* Dark Grey */
+            --accent-primary: #000000; /* Pure Black */
+            --accent-hover: #333333;
+            --border-color: #000000;
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
             --font-mono: 'Courier New', Courier, monospace;
+            --sidebar-width: 300px;
         }
 
         * {
@@ -29,48 +30,45 @@
             color: var(--text-main);
             font-family: var(--font-main);
             height: 100vh;
-            overflow: hidden; /* Prevent body scroll, handle inside main */
+            overflow: hidden;
             display: flex;
+            transition: background-color 0.3s;
         }
 
-        /* --- BACKGROUND ANIMATION CANVAS --- */
+        /* --- BACKGROUND CANVAS --- */
         #neural-canvas {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 0;
-            opacity: 0.4;
+            z-index: 0; /* Behind everything */
+            opacity: 0.15; /* Subtle texture */
+            pointer-events: none; /* Let clicks pass through */
         }
 
-        /* --- SIDEBAR --- */
-        aside {
-            width: 280px;
-            background: var(--sidebar-bg);            backdrop-filter: blur(10px);
-            border-right: 1px solid var(--border-color);
+        /* --- SIDEBAR (DESKTOP) --- */        aside {
+            width: var(--sidebar-width);
+            background: var(--bg-color);
+            border-right: 2px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            padding: 2rem;
-            z-index: 10;
-            transition: all 0.3s ease;
+            padding: 2.5rem;
+            z-index: 20;
+            position: relative;
         }
 
         .brand {
             font-family: var(--font-mono);
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: 1.8rem;
+            font-weight: 900;
             color: var(--accent-primary);
-            margin-bottom: 3rem;
-            letter-spacing: -1px;
+            margin-bottom: 4rem;
+            letter-spacing: -2px;
             text-transform: uppercase;
-            border-bottom: 1px solid var(--accent-primary);
-            padding-bottom: 10px;
+            border-bottom: 4px solid var(--accent-primary);
+            padding-bottom: 15px;
             display: inline-block;
-        }
-
-        .brand span {
-            color: var(--text-main);
         }
 
         nav ul {
@@ -78,280 +76,340 @@
         }
 
         nav li {
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         nav button {
             background: none;
-            border: none;
+            border: 1px solid transparent;
             color: var(--text-muted);
             font-family: var(--font-mono);
-            font-size: 0.9rem;
+            font-size: 1rem;
+            font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 12px;
-            transition: all 0.3s ease;
+            gap: 15px;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             width: 100%;
             text-align: left;
-            padding: 10px 0;
+            padding: 12px 15px;
         }
-        nav button:hover, nav button.active {
-            color: var(--accent-primary);
+
+        nav button:hover {            color: var(--bg-color);
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
             transform: translateX(5px);
-            text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+        }
+
+        nav button.active {
+            color: var(--bg-color);
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
         }
 
         nav button::before {
-            content: '◈';
-            font-size: 0.8rem;
+            content: '>';
+            font-size: 1.2rem;
             opacity: 0;
-            transition: opacity 0.3s;
+            transform: translateX(-10px);
+            transition: all 0.2s;
         }
 
         nav button:hover::before, nav button.active::before {
             opacity: 1;
-            color: var(--accent-secondary);
+            transform: translateX(0);
         }
 
         .footer-status {
             margin-top: auto;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             font-family: var(--font-mono);
+            border-top: 1px solid #ccc;
+            padding-top: 1rem;
         }
 
         .status-dot {
             display: inline-block;
             width: 8px;
             height: 8px;
-            background-color: #00ff00;
+            background-color: #000;
             border-radius: 50%;
             margin-right: 8px;
-            box-shadow: 0 0 5px #00ff00;
+            animation: pulse 2s infinite;
         }
 
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
         /* --- MAIN CONTENT AREA --- */
         main {
             flex: 1;
             position: relative;
             z-index: 5;
             overflow-y: auto;
-            padding: 4rem;
+            padding: 4rem 5rem;
+            background: rgba(244, 244, 244, 0.8); /* Slight transparency */
+            backdrop-filter: blur(5px);
         }
 
         /* Custom Scrollbar */
         main::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
+            background: var(--bg-color);
+            border-left: 1px solid #000;
         }
-        main::-webkit-scrollbar-track {
-            background: var(--bg-color);        }
         main::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 4px;
-        }
-        main::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-primary);
+            background: #000;
         }
 
         /* --- SECTIONS --- */
         section {
             display: none;
-            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            max-width: 1000px;
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 900px;
         }
 
         section.active {
             display: block;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         /* --- HOME STYLES --- */
         .hero-title {
-            font-size: 4rem;
-            line-height: 1.1;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(90deg, #fff, #999);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 5rem;
+            line-height: 0.95;
+            font-weight: 900;
+            margin-bottom: 2rem;
+            color: var(--text-main);
+            letter-spacing: -3px;
         }
 
         .hero-subtitle {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            max-width: 600px;
+            font-size: 1.5rem;
+            color: var(--text-muted);            max-width: 600px;
             margin-bottom: 3rem;
-            line-height: 1.6;
-            border-left: 2px solid var(--accent-secondary);
-            padding-left: 20px;
+            line-height: 1.4;
+            font-weight: 300;
+            border-left: 4px solid var(--accent-primary);
+            padding-left: 25px;
         }
 
         .cta-button {
             display: inline-block;
-            padding: 15px 40px;
-            background: transparent;            border: 1px solid var(--accent-primary);
-            color: var(--accent-primary);
+            padding: 20px 50px;
+            background: var(--accent-primary);
+            border: 2px solid var(--accent-primary);
+            color: var(--bg-color);
             font-family: var(--font-mono);
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             text-decoration: none;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
+            transition: all 0.2s;
         }
 
         .cta-button:hover {
-            background: var(--accent-primary);
-            color: #000;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            background: transparent;
+            color: var(--accent-primary);
+            cursor: pointer;
         }
 
         /* --- MODELS STYLES --- */
         .models-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 2rem;
         }
 
         .model-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
+            background: #fff;
+            border: 2px solid var(--border-color);
             padding: 2rem;
-            transition: all 0.3s;
-            position: relative;
+            transition: all 0.2s;
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.1);
         }
 
         .model-card:hover {
-            border-color: var(--accent-secondary);
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.05);
+            transform: translate(-3px, -3px);
+            box-shadow: 8px 8px 0px rgba(0,0,0,1);
         }
 
         .model-header {
-            display: flex;
-            justify-content: space-between;
+            display: flex;            justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
         }
 
         .model-name {
             font-family: var(--font-mono);
-            font-weight: 700;
-            color: var(--text-main);
+            font-weight: 900;
+            font-size: 1.1rem;
+            text-transform: uppercase;
         }
+
         .model-type {
             font-size: 0.7rem;
-            background: #222;
-            padding: 2px 8px;
-            border-radius: 4px;
-            color: var(--accent-secondary);
+            background: #000;
+            color: #fff;
+            padding: 3px 8px;
+            font-family: var(--font-mono);
         }
 
         .model-desc {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--text-muted);
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
             line-height: 1.5;
         }
 
         .download-btn {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 10px;
             width: 100%;
-            padding: 10px;
-            background: #111;
-            border: 1px solid #333;
-            color: #fff;
+            padding: 12px;
+            background: #fff;
+            border: 1px solid #000;
+            color: #000;
             cursor: pointer;
             font-family: var(--font-mono);
+            font-weight: 700;
             font-size: 0.8rem;
-            transition: 0.2s;
             text-decoration: none;
+            transition: 0.2s;
         }
 
         .download-btn:hover {
-            border-color: var(--accent-primary);
-            color: var(--accent-primary);
+            background: #000;
+            color: #fff;
         }
-
         /* --- ABOUT STYLES --- */
         .about-content {
-            border-top: 1px solid var(--border-color);
+            border-top: 2px solid #000;
             padding-top: 2rem;
         }
 
         .about-text {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             line-height: 1.8;
-            color: #ccc;
+            color: #000;
+            font-weight: 500;
         }
 
-        .tech-stack {            margin-top: 3rem;
+        .tech-stack {
+            margin-top: 3rem;
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
         }
 
         .tech-tag {
-            border: 1px solid var(--text-muted);
-            padding: 5px 15px;
+            border: 1px solid #000;
+            padding: 8px 20px;
             font-family: var(--font-mono);
             font-size: 0.8rem;
-            color: var(--text-muted);
+            font-weight: 700;
+            background: #fff;
         }
 
-        /* Responsive */
+        /* --- MOBILE TOGGLE BUTTON --- */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* --- MOBILE RESPONSIVENESS --- */
         @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-                height: auto;
-                overflow: auto;
+            body {                flex-direction: column;
+                height: 100vh;
+                overflow: hidden;
             }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
             aside {
-                width: 100%;
-                border-right: none;
-                border-bottom: 1px solid var(--border-color);
-                padding: 1rem;
-                position: sticky;
+                position: fixed;
                 top: 0;
+                left: 0;
+                height: 100%;
+                width: 85%; /* Drawer width */
+                max-width: 320px;
+                background: #fff;
+                border-right: 2px solid #000;
+                transform: translateX(-100%); /* Hidden by default */
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 10px 0 30px rgba(0,0,0,0.2);
             }
+
+            aside.open {
+                transform: translateX(0);
+            }
+
             main {
-                padding: 2rem;
+                padding: 5rem 1.5rem 2rem 1.5rem;
+                width: 100%;
+                background: transparent; /* Remove backdrop on mobile for cleaner look */
             }
+
             .hero-title {
-                font-size: 2.5rem;
+                font-size: 3rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+                padding-left: 15px;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- Background Animation -->
+    <!-- Background Animation Canvas -->
     <canvas id="neural-canvas"></canvas>
 
+    <!-- Mobile Toggle -->    <button class="mobile-menu-btn" onclick="toggleMenu()">MENU ::</button>
+
     <!-- Sidebar -->
-    <aside>
+    <aside id="sidebar">
         <div class="brand">Oro<span>Labs</span></div>
         
         <nav>
             <ul>
-                <li>                    <button class="nav-btn active" onclick="navigate('home')">
+                <li>
+                    <button class="nav-btn active" onclick="navigate('home'); toggleMenu()">
                         <span>01. Home</span>
                     </button>
                 </li>
                 <li>
-                    <button class="nav-btn" onclick="navigate('models')">
+                    <button class="nav-btn" onclick="navigate('models'); toggleMenu()">
                         <span>02. Models</span>
                     </button>
                 </li>
                 <li>
-                    <button class="nav-btn" onclick="navigate('about')">
+                    <button class="nav-btn" onclick="navigate('about'); toggleMenu()">
                         <span>03. About</span>
                     </button>
                 </li>
@@ -359,8 +417,8 @@
         </nav>
 
         <div class="footer-status">
-            <div><span class="status-dot"></span>SYSTEM ONLINE</div>
-            <div style="margin-top: 5px; opacity: 0.5;">v.2.0.4 [BETA]</div>
+            <div><span class="status-dot"></span>SYSTEM ACTIVE</div>
+            <div style="margin-top: 5px; opacity: 0.5;">v.3.0.1 [RELEASE]</div>
         </div>
     </aside>
 
@@ -369,19 +427,18 @@
         
         <!-- HOME SECTION -->
         <section id="home" class="active">
-            <h1 class="hero-title">Architecting the<br>Synthetic Mind.</h1>
+            <h1 class="hero-title">PURE<br>INTELLIGENCE.</h1>
             <p class="hero-subtitle">
                 OroLabs is a next-generation research facility dedicated to open-weights artificial intelligence. We build the neural architectures that define tomorrow.
             </p>
-            <a href="#" onclick="navigate('models')" class="cta-button">Initialize Models &rarr;</a>
+            <a href="#" onclick="navigate('models'); toggleMenu()" class="cta-button">Access Repository &rarr;</a>
         </section>
 
         <!-- MODELS SECTION -->
         <section id="models">
-            <h2 style="font-family: var(--font-mono); margin-bottom: 2rem; color: var(--accent-primary);">
-                <span style="opacity: 0.5;">//</span> REPOSITORY
+            <h2 style="font-family: var(--font-mono); margin-bottom: 2rem; font-size: 2rem; border-bottom: 2px solid #000; padding-bottom: 10px;">
+                REPOSITORY
             </h2>
-
             <div class="models-grid">
                 <!-- Model 1 -->
                 <div class="model-card">
@@ -390,9 +447,10 @@
                         <span class="model-type">LLM</span>
                     </div>
                     <p class="model-desc">
-                        High-efficiency base model optimized for reasoning and code generation. Quantized for consumer hardware.                    </p>
+                        High-efficiency base model optimized for reasoning and code generation. Quantized for consumer hardware.
+                    </p>
                     <a href="#" class="download-btn">
-                        <span>⬇</span> Download .GGUF
+                        <span>DOWNLOAD .GGUF</span> <span>&#8595;</span>
                     </a>
                 </div>
 
@@ -406,7 +464,7 @@
                         Multimodal architecture capable of interpreting complex visual data streams in real-time.
                     </p>
                     <a href="#" class="download-btn">
-                        <span>⬇</span> Download .Safetensors
+                        <span>DOWNLOAD .SAFETENSORS</span> <span>&#8595;</span>
                     </a>
                 </div>
 
@@ -414,13 +472,13 @@
                 <div class="model-card">
                     <div class="model-header">
                         <span class="model-name">Oro-Synth-Audio</span>
-                        <span class="model-type">Audio</span>
+                        <span class="model-type">AUDIO</span>
                     </div>
                     <p class="model-desc">
                         Neural vocoder and text-to-speech engine with ultra-low latency and human-like intonation.
                     </p>
                     <a href="#" class="download-btn">
-                        <span>⬇</span> Download .ONNX
+                        <span>DOWNLOAD .ONNX</span> <span>&#8595;</span>
                     </a>
                 </div>
             </div>
@@ -428,10 +486,9 @@
 
         <!-- ABOUT SECTION -->
         <section id="about">
-            <h2 style="font-family: var(--font-mono); margin-bottom: 2rem; color: var(--accent-primary);">
-                <span style="opacity: 0.5;">//</span> MANIFESTO
-            </h2>
-            
+            <h2 style="font-family: var(--font-mono); margin-bottom: 2rem; font-size: 2rem; border-bottom: 2px solid #000; padding-bottom: 10px;">
+                MANIFESTO
+            </h2>            
             <div class="about-content">
                 <p class="about-text">
                     At OroLabs, we believe intelligence is not a resource to be hoarded, but a tool to be forged. Our mission is to democratize access to state-of-the-art neural networks.
@@ -439,7 +496,8 @@
                     We operate at the intersection of mathematics, philosophy, and raw computation. Every model we release is a step towards a future where human creativity is amplified by synthetic capability.
                 </p>
 
-                <div class="tech-stack">                    <div class="tech-tag">PyTorch</div>
+                <div class="tech-stack">
+                    <div class="tech-tag">PyTorch</div>
                     <div class="tech-tag">CUDA</div>
                     <div class="tech-tag">Transformers</div>
                     <div class="tech-tag">Rust</div>
@@ -466,15 +524,29 @@
             // Show target section
             document.getElementById(sectionId).classList.add('active');
 
-            // Add active class to clicked button (finding by text content logic for simplicity or index)
-            // In a real app, pass 'this' or use IDs. Here we iterate to find match.
+            // Add active class to clicked button
             const buttons = document.querySelectorAll('.nav-btn');
             if(sectionId === 'home') buttons[0].classList.add('active');
             if(sectionId === 'models') buttons[1].classList.add('active');
             if(sectionId === 'about') buttons[2].classList.add('active');
         }
 
-        // --- CANVAS PARTICLE ANIMATION (The "AI" Vibe) ---
+        // --- MOBILE MENU TOGGLE ---
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.querySelector('.mobile-menu-btn');
+            
+            // Only toggle on mobile
+            if (window.innerWidth <= 768) {                sidebar.classList.toggle('open');
+                if (sidebar.classList.contains('open')) {
+                    btn.innerHTML = "CLOSE ::";
+                } else {
+                    btn.innerHTML = "MENU ::";
+                }
+            }
+        }
+
+        // --- CANVAS PARTICLE ANIMATION (BLACK & WHITE) ---
         const canvas = document.getElementById('neural-canvas');
         const ctx = canvas.getContext('2d');
         
@@ -482,13 +554,13 @@
         let particles = [];
 
         // Configuration
-        const particleCount = 60; // Number of nodes
-        const connectionDistance = 150; // Distance to draw lines
-        const mouseDistance = 200; // Interaction radius
+        const particleCount = 50; 
+        const connectionDistance = 150; 
 
         let mouse = { x: null, y: null };
 
-        window.addEventListener('mousemove', (e) => {            mouse.x = e.x;
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
             mouse.y = e.y;
         });
 
@@ -503,8 +575,8 @@
             constructor() {
                 this.x = Math.random() * width;
                 this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.5; // Velocity X
-                this.vy = (Math.random() - 0.5) * 0.5; // Velocity Y
+                this.vx = (Math.random() - 0.5) * 0.5; 
+                this.vy = (Math.random() - 0.5) * 0.5; 
                 this.size = Math.random() * 2 + 1;
             }
 
@@ -512,32 +584,15 @@
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // Bounce off edges
                 if (this.x < 0 || this.x > width) this.vx *= -1;
                 if (this.y < 0 || this.y > height) this.vy *= -1;
-
-                // Mouse interaction
-                let dx = mouse.x - this.x;
-                let dy = mouse.y - this.y;
-                let distance = Math.sqrt(dx*dx + dy*dy);
-
-                if (distance < mouseDistance) {
-                    const forceDirectionX = dx / distance;
-                    const forceDirectionY = dy / distance;
-                    const force = (mouseDistance - distance) / mouseDistance;
-                    const directionX = forceDirectionX * force * 2; // Push strength
-                    const directionY = forceDirectionY * force * 2;
-
-                    this.x -= directionX;
-                    this.y -= directionY;
-                }
             }
-
             draw() {
-                ctx.fillStyle = '#FFD700'; // Gold color for nodes
+                ctx.fillStyle = '#000000'; // Black particles
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();            }
+                ctx.fill();
+            }
         }
 
         function initParticles() {
@@ -554,7 +609,6 @@
                 particles[i].update();
                 particles[i].draw();
 
-                // Draw connections
                 for (let j = i; j < particles.length; j++) {
                     let dx = particles[i].x - particles[j].x;
                     let dy = particles[i].y - particles[j].y;
@@ -562,24 +616,7 @@
 
                     if (distance < connectionDistance) {
                         ctx.beginPath();
-                        // Opacity based on distance
                         let opacity = 1 - (distance / connectionDistance);
-                        ctx.strokeStyle = `rgba(0, 243, 255, ${opacity * 0.4})`; // Cyan lines
+                        ctx.strokeStyle = `rgba(0, 0, 0, ${opacity * 0.2})`; // Faint black lines
                         ctx.lineWidth = 1;
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
-                    }
-                }
-            }
-            requestAnimationFrame(animate);
-        }
-
-        // Initialize
-        resize();
-        initParticles();
-        animate();
-
-    </script>
-</body>
-  </html>
+                
